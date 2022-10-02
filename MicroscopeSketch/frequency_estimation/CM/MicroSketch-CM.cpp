@@ -16,7 +16,7 @@ uint64_t calc(uint32_t a, uint32_t b) {
 
 void load_CAIDA() {
 	char CAIDA[100];
-	sprintf(CAIDA, "E:\\DataSet\\CAIDA\\formatted00.dat");
+	sprintf(CAIDA, "/share/datasets/CAIDA2018/dataset/130000.dat");
 	ifstream fin(CAIDA, ios::binary);
     uint8_t key[TRACE_LEN];
     rep2 (pkt, 0, MAXINPUT) {

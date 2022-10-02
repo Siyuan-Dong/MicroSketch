@@ -1,4 +1,31 @@
 #include "inc.h"
+void load_IMC() {
+	
+	BOBHash32 * hash = new BOBHash32(uint8_t(rd() % MAX_PRIME32));
+	char IMC[100];
+	sprintf(IMC, "D:\\University\\Research\\yt\\sliding_window_topk\\data\\20.dat");
+	ifstream fin(IMC, ios::binary);
+    uint8_t key[TRACE_LEN];
+    rep2 (pkt, 0, MAXINPUT) {
+        fin.read((char *)key, TRACE_LEN);
+        addr[pkt]= hash->run((char *) key, 13);
+		timestamp[pkt] = pkt;
+    }
+}
+
+
+void load_zipf(int alpha) {
+	char zipf[100];
+	sprintf(zipf, "E:\\DataSet\\new_zipf\\%03d.dat", alpha);
+	ifstream fin(zipf, ios::binary);
+    uint8_t key[TRACE_LEN];
+    rep2 (pkt, 0, MAXINPUT) {
+        fin.read((char *)key, TRACE_LEN);
+        memcpy(addr+pkt, key, TUPLE_LEN);
+		timestamp[pkt] = pkt;
+    }
+}
+
 template<uint8_t key_len> struct MicroSketch_HG {
 	int m, win, t, d, size_k, n, log_base;
 	const double c = 1/1.08;

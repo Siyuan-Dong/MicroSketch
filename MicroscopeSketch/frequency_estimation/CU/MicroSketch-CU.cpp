@@ -1,7 +1,23 @@
 #include "../MicroSketch-CU.h"
+#include <cstring>
+#define dataset 1
+#if dataset==1
+	const int TRACE_LEN = 16;
+	const int TUPLE_LEN = 4;
+	const string res_file = "caida.csv";
+#elif dataset==2
+	const int TRACE_LEN = 26;
+	const int TUPLE_LEN = 4;
+	const string res_file = "imc.csv";
+#elif dataset==3
+	const int TRACE_LEN = 4;
+	const int TUPLE_LEN = 4;
+	const int alpha = 30;
+	const string res_file = "zipf.csv";
+#endif
 const int M = 6e3, T = 1, H = 3, size_k = 4, log_base = 1;
-const int TRACE_LEN = 16;
-const int TUPLE_LEN = 4;
+// const int TRACE_LEN = 16;
+// const int TUPLE_LEN = 4;
 const int MAXINPUT = 1e7;
 const int WIN = 1e6;
 const int NUM = 3, LIM = 500;
@@ -16,26 +32,55 @@ uint64_t calc(uint32_t a, uint32_t b) {
 
 void load_CAIDA() {
 	char CAIDA[100];
-	sprintf(CAIDA, "E:\\DataSet\\CAIDA\\formatted00.dat");
+	sprintf(CAIDA, "/share/datasets/CAIDA2018/dataset/130000.dat");
 	ifstream fin(CAIDA, ios::binary);
     uint8_t key[TRACE_LEN];
     rep2 (pkt, 0, MAXINPUT) {
         fin.read((char *)key, TRACE_LEN);
         memcpy(addr+pkt, key+8, TUPLE_LEN);
-//		timestamp[pkt] = calc(*((uint32_t *) key), *((uint32_t *) key+1)); // time-based
-		timestamp[pkt] = pkt; // count-based
+//		timestamp[pkt] = calc(*((uint32_t *) key), *((uint32_t *) key+1));
+		timestamp[pkt] = pkt;
+    }
+}
+void load_IMC() {
+	
+	BOBHash32 * hash = new BOBHash32(uint8_t(rd() % MAX_PRIME32));
+	char IMC[100];
+	sprintf(IMC, "/share/datasets/DataSet/webpage/webdocs_form06.dat");
+	ifstream fin(IMC, ios::binary);
+    uint8_t key[TRACE_LEN];
+    rep2 (pkt, 0, MAXINPUT) {
+        fin.read((char *)key, TRACE_LEN);
+        addr[pkt]= hash->run((char *) key, 13);
+		timestamp[pkt] = pkt;
+    }
+}
+
+
+void load_zipf(int alpha) {
+	char zipf[100];
+	sprintf(zipf, "/share/datasets/new_zipf/%03d.dat", alpha);
+	ifstream fin(zipf, ios::binary);
+    uint8_t key[TRACE_LEN];
+    rep2 (pkt, 0, MAXINPUT) {
+        fin.read((char *)key, TRACE_LEN);
+        memcpy(addr+pkt, key, TUPLE_LEN);
+		timestamp[pkt] = pkt;
     }
 }
 
 int main() {
     load_CAIDA();
 	srand(time(0));
-	freopen("output.csv", "w", stdout);
-	cout << "MicroSketch-CU" << endl;
+	freopen(res_file.c_str(), "w", stdout);
+	// freopen("output.csv", "w", stdout);
+	cout << "mem,aae," << endl;
+	// cout << "MicroSketch-CU" << endl;
 	for (int mem = 100; mem <= 500; mem += 100) {
 			strmap.clear();
 			int M = mem * 1024 * 8 / H / (32-size_k + (T+2)*size_k + ceil(5 - log(log_base)/log(2)));
-			auto sketch = new MicroSketch_CU<TUPLE_LEN>(M, WIN, T, size_k, H, log_base);
+			MicroSketch_CU<TUPLE_LEN>* sketch = new MicroSketch_CU<TUPLE_LEN>(M, WIN, T, size_k, H, log_base);
+			// auto sketch = new MicroSketch_CU<TUPLE_LEN>(M, WIN, T, size_k, H, log_base);
 			double totaee = 0;
 			int cnt = 0, pkt = 0, h = 0, t = 0;
 			while (cnt < 100 * (NUM-1)) {
@@ -63,7 +108,8 @@ int main() {
 				}
 				pkt++;
 			}
-			cout << totaee / cnt << endl;
+			cout << mem <<","<<totaee / cnt<<"," << endl;
+			// cout << totaee / cnt << endl;
 	}
 	
     return 0;
