@@ -114,7 +114,22 @@ template<uint8_t key_len> struct MicroSketch_CU {
 		hash = new BOBHash32*[hnum];
 		rep2 (i, 0, hnum) hash[i] = new BOBHash32(uint8_t(rd() % MAX_PRIME32));
 	}
+    ~MicroSketch_CU(){
+        rep2 (i, 0, hnum) {
+			rep2 (j, 0, n) {
+                delete[] a[i][j];
+            }
+            delete[] a[i];
+            delete[] b[i];
+            delete[] s[i];
+		}
+        delete[] a;
+        delete[] b;
+        delete[] s;
 
+        rep2 (i, 0, hnum) delete hash[i];
+        delete[] hash;
+    }
 	void insert(uint8_t *key, uint64_t clock) {
         int cur = (clock / (win / (t-2))) % t;
 		int hashid[hnum];
